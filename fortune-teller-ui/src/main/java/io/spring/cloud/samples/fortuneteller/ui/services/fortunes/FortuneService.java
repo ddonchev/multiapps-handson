@@ -15,8 +15,12 @@
  */
  package io.spring.cloud.samples.fortuneteller.ui.services.fortunes;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -31,9 +35,19 @@ public class FortuneService {
     @Autowired
     RestTemplate restTemplate;
 
+    @Value("${localdev:false}")
+    boolean localDev;
+
     @HystrixCommand(fallbackMethod = "fallbackFortune")
     public Fortune randomFortune() {
-        return restTemplate.getForObject("http://fortunes/random", Fortune.class);
+        String fortunesServiceUrl;
+        try {
+            //smell - protocol for test & local dev differes from productive usage and is hard-coded.
+            fortunesServiceUrl = new URL(localDev ? "http" : "https", "fortunes", "/random").toString();
+            return restTemplate.getForObject(fortunesServiceUrl, Fortune.class);
+        } catch (MalformedURLException e) {
+            return fallbackFortune();
+        }
     }
 
     private Fortune fallbackFortune() {
