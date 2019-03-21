@@ -1,10 +1,10 @@
 ---
 applications:
 - name: fortune-teller-ui
-  memory: 384M
+  memroy: 512M
   instances: 1
   buildpak: sap_java_buildpack
-  path: 'target/fortune-teller-ui-0.0.1-SNAPSHOT.jar'
+  path: 'fortune-teller-ui/target/fortune-teller-ui-0.0.1-SNAPSHOT.jar'
   random-route: true
   services:
   - fortune-logs

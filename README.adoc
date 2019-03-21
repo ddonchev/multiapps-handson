@@ -1,77 +1,240 @@
-image:https://circleci.com/gh/spring-cloud-services-samples/fortune-teller.svg?style=svg["CircleCI", link="https://circleci.com/gh/spring-cloud-services-samples/fortune-teller"]
+From `cf push` to `cf deploy` hands-on
+======================================
 
-= Fortune Teller
+With this tutorial, you can deploy the fortune teller application in the CF platform. You can experience both - the classic `cf push` way of doing this and the new `cf deploy`. Even do a zero downtime update of the app with `cf bg-deploy`.   
 
-*Fortune Teller* is a very basic application composed of two services:
+WARNING: Make sure to tell your cafe barista when you finish this tutorial. A yummy snack will be waiting for you after the last command. 
 
-. link:fortune-teller-fortune-service[Fortune Service] - serves up random Chinese fortune cookie fortunes
-. link:fortune-teller-ui[Fortune UI] - presents a UI that consumes the fortune service
+Table Of Contents
+-----------------
 
-It leverages libraries and services from Spring Cloud and Netflix OSS to compose the system.
+-  <<About the fortune teller>>
+-  <<0 Prerequisites>>
+-  <<1. Login to the platform>>
+-  <<2. Do the cf push>>
+-  <<3. Do the mta build & cf deploy>>
+-  <<4. Do the blue-green deploy>>
+-  <<5. Do the undeploy>>
 
-Fortune Teller is deployable to any Cloud Foundry environment utilizing the service components that have been packaged with the project.
-However, it is most easily deployed to Pivotal Cloud Foundry environments that have installed the https://network.pivotal.io/products/p-spring-cloud-services[Spring Cloud Services] package.
+About the fortune teller
+------------------------
+The name says it all - this simple example app will tell you a new 'fortune' each time you refresh it's web ui. No cookies are given yet.
+It's setup consists of a few java spring apps and services depicted in the diagram.
 
-== Build
+image:docs/images/FortuneTeller.png[]
 
-. Using Maven, build and package the application:
-+
-----
-$ mvn clean package
-----
-+
-Maven will automatically download all of _Fortune Teller_'s dependencies. This may take a few moments.
+Apps:
+
+* The fortune-teller-ui application serves some  java script & static html ui and polls random \'fortunes' from the fortune service.
+* The fortune-teller-service application serves a fortune rest api, providing a single random fortune or the complete list of all fortunes. It consumes a backing database service. 
+* The fortune-teller-hystrix-dashboard app is an optional component, providing a dashboard of the ui app's circuit breaker
+
+Services:
+
+* postgresql backing service - database holding the list of fortunes. For the purposes of this tutorial we'll use a postgresql provided by the SAP Cloud Platform. 
+* application logging service - integration with SCP collecting logs from applications and making them available on an https://logs.cf.eu10.hana.ondemand.com/[ELK stack]
+
+## 0 Prerequisites
+
+#### Account in cf
+
+This tutorial requires some resources in the cloud. If you don't already have an Sap Cloud Platform user/account just open a landscape and one will automatically be created for you:
+
+1. Open the SCP cockpit for an eu landscape and log on with your sap email and i/c/d-user password: https://account.hana.ondemand.com[https://account.hana.ondemand.com] ; 
+TODO: work out account reuse/authentication
+
+NOTE: Alternatively, a pre-configured technical user may be used. Please ask your barista for credentials *in person*. 
+
+#### This repository
+Clone the repository, no account in github is required. 
+
+    git -c http.sslVerify=false clone https://github.wdf.sap.corp/internetcafe/cf.push-cf.deploy.git
+    cd cf.push-cf.deploy
+
+NOTE: Changing the source code won't be required. However, if you want to make changes, you can always rebuild the deployable content with maven. Maven may or may not be available on your machine. If it is, just run `mvn clean install` to build.
+
+#### Command line tools - *! Already installed on your machine. do not download !*
+This tutorial requires the following command line tools which you __already have pre-installed__: 
+
+ * https://github.com/cloudfoundry/cli#installers-and-compressed-binaries[cloud foundry command line tool (cf cli)]
+ * https://github.com/cloudfoundry-incubator/multiapps-cli-plugin[MultiApps cf cli plugin]
+ * https://github.com/SAP/cloud-mta-build-tool[mta build tool]   
 
 
-== Deploy to Pivotal Cloud Foundry with Spring Cloud Services
+## 1. Login to the platform
 
-. Run `scripts/pcf-create-services.sh` to create the services that you need:
-+
-----
-$ ./scripts/pcf-create-services.sh
-Creating service fortunes-db in org microservices / space fortune-teller as admin...
-OK
-Creating service config-server in org microservices / space fortune-teller as admin...
-OK
-Creating service service-registry in org microservices / space fortune-teller as admin...
-OK
-Creating service circuit-breaker-dashboard in org microservices / space fortune-teller as admin...
-OK
-----
 
-. Click on the *Manage* links for the *Config Service*, *Service Registry*, and *Circuit Breaker Dashboard*. Make sure the services are finished initializing before you proceed.
+Before beginning, login to the platform and create your self a 'space' to work in
 
-. Edit the `manifest-pcf.yml` file to specify the Cloud Foundry target the apps are being pushed to, replacing the URL in `CF_TARGET: https://api.yourpcfenvironment.local` with the API endpoint for your Cloud Foundry deployment.
+    cf api https://api.cf.eu10.hana.ondemand.com
+    cf login -u <user.email>@sap.com -o cafe_mta / cf auth ... in case of technical user
+    cf create-space <i/c/d/-user> -o cafe_mta
+    cf target -o cafe_mta -s <i/c/d-user>
 
-. Push the microservices:
+## 2. Do the cf push
 
-+
-----
-$ cf push -f manifest-pcf.yml
-----
-+
-This will push the fortunes service and the ui application and bind all of the services.
+Let's push to the cloud, the standard cf way.
 
-== Test the Application
+IMPORTANT: The commands in the tutorial should be executed in the root of the repository :warning:
 
-. In a browser, access the fortunes-ui application at the route that was created for you:
-+
-image:docs/images/fortunes_1.png[]
+TIP: Of the instructions below, creation of the app entities is possible with a single command `cf push -f manifest`. However, service creation, app reconfiguration and restart would still have to be executed manually. Follow the steps below to work on each, one step at a time. 
 
-. Stop the fortunes application:
-+
-----
-$ cf stop fortune-service
-----
+#### 2.1 Backing services creation.
 
-. Access the fortunes-ui and see that the ``fallback fortune'' is being returned.
-+
-image:docs/images/fortunes_4.png[]
+The cf client `marketplace` command lists all available backing services SCP provides in your space. The `services` command lists all created service instances in the space. 
+The following create an application logs service instance with plan lite named \'fortune-logs' and a postgresql database one with a dev plan and name: \'fortune-service-database' .
 
-. Start the fortunes application:
-+
-----
-$ cf start fortune-service
-----
+    cf marketplace 
+    cf create-service application-logs lite fortune-logs
+    cf create-service postgresql v9.6-dev fortune-service-database
+    cf services 
 
-. Continue to access the fortunes-ui. After the fortunes service has re-registered with Eureka and the fortunes-ui load balancer caches are refreshed, you should then start getting random fortunes again!
+*logs traced by apps, bound to an application logs service can be browsed in the platform's application logging service \'kibana' ui
+
+#### 2.2 UI app
+Now push the front-end application fortune-teller-ui with the following
+
+    cf push -f ./manifest-ui
+
+*a cf push manifest file describes one or many apps with their properties like environment variables, memory configurations, bound services etc. 
+
+#### 2.3 Try the UI
+You can check out how your app looks like at it's platform generated route. 
+List the app details to see it's route and open it in a browser. look for `route: <>`
+
+    cf app ./fortune-teller-ui
+
+The app url is constructed as the https protocol on that route: https://<route>
+ e.g. https://fortune-teller-ui-grumpy-wombat.cfapps.eu10.hana.ondemand.com 
+
+#### 2.4 Hystrix dashboard
+The app has no back-end to provide content yet; It's circuit breaker(hystrix) should fall back to a default message and no new fortunes will come with refreshing. Let's add a hystrix dashboard app to monitor how it behaves:
+
+    cf push -f ./manifest-hystrix
+
+Let's configure the dashboard with the front end app url via an environment variable:
+
+    cf set-env fortune-teller-hystrix-dashboard UIURL https://<fortune-teller-ui app route>
+    cf restart fortune-teller-hystrix-dashboard
+
+*a restart is required in order for the app to read it's newly set environment variable.
+
+TIP: Open the dashboard app in a browser too. You may verify that it works by refreshing the _ui app page_ a few times while the _dashboard page_ is opened.
+
+#### 2.5 Backend
+Let's continue building the application with it's back-end app. The previously created db service will automatically bind to the app as described in the manifest
+
+    cf push -f ./manifest-service
+
+Now let's tell the front end app where to reach the back end. You already found the ui app's route. Find the backend app's route and amend :443 (https port). Set it as 'FORTUNE_SERVICE_FQDN' variable to the ui app:
+    
+TIP: the backend application route can be acquired with `cf app fortune-teller-service` as described in [ 2.3 Try the UI ]. 
+
+    cf set-env fortune-teller-ui FORTUNE_SERVICE_FQDN <route>:443
+    #e.g. cf set-env fortune-teller-ui FORTUNE_SERVICE_FQDN fortune-teller-service-wacky-potato.cfapps.eu10.hana.ondemand.com:443
+    cf restart fortune-teller-ui
+
+#### 2.6 Test it
+Go back to the ui app and refresh it a couple times - each time a random fortune should be displayed for your destiny to follow. 
+
+*Congratulations, you brought your application to life :tada: !* 
+
+#### 2.7 Clean up
+Now let's delete everything to free the resources. 
+
+    cf delete -f fortune-teller-ui
+    cf delete -f fortune-teller-service
+    cf delete -f fortune-teller-hystrix-dashboard
+    cf delete-service -f fortune-service-database
+    cf delete-service -f fortune-teller-logs
+
+
+## 3. Do the mta build & cf deploy
+
+The **M**ulti **T**arget **A**pplication model provides a powerful abstraction, capable of depicting complicated relationship between different platform entities. You may find detailed information in the https://help.sap.com/viewer/65de2977205c403bbc107264b8eccf4b/Cloud/en-US/d04fc0e2ad894545aebfd7126384307c.html[SCP online documentation].
+
+Have a look how the fortune teller app is described. Look for the `mtad.yaml` file in the root of the repository. 
+This descriptor is used when assembling, deploying/updating the application.
+
+#### 3.1 Assemble an MTAR
+Let's assemble an *MTA* archive! The mta archive is a (zip)package, containing the application's full or partial deployable content. It is deployed at once with a single command. It's versioned and may easily be transported and consistently applied to multiple environments e.g. dev/test/prod. 
+
+Assemlbe with the already installed 'mta build tool' `mbt`:
+
+    mbt assemble 
+
+You'll find a new directory `mta_archives` created in the project root. Inside is the new `*.mtar` archive. 
+
+#### 3.2 cf deploy
+Now simply deploy it to the cloud with the following command :zap: :
+
+    cf deploy mta_archives/fortune-teller_0.0.1.mtar
+
+*That is it :tada: !* 
+
+NOTE: If you review the cf deploy command output, you'll notice that application creation is happening in parallel, to optimize making deploy-times. Order may be controlled via modelling \'deployed-after' parameters in the mtad.yaml.  
+
+NOTE: No additional reconfiguration is required either, as the dependencies are modelled in the mtad.yaml and the deployer takes care of them during the app creation. 
+
+#### 3.3 Examine your MTA
+You may find info of the mta with the following commands
+    
+    cf mtas
+    cf mta fortune-teller
+
+NOTE: You can check how your app is behaving in the same way as in 2.6 
+
+*Congratulations on your first mta deployment :clap: !* 
+
+
+## 4. Do the blue-green deploy
+
+Ok, you did an initial deployment. Want to see how to update your app? This can be done with *no down time* by the mta *blue green deployment* 	:green_book: :blue_book: !
+
+#### 4.1 A new MTA version
+
+NOTE: There is a branch in this repo, with a modified fortune teller app. If you'd like to do your own changes to the app by changing the source and rebuilding ( `mvn clean install` ; `mbt assemble` ) .
+
+    git checkout 'green-version'
+    
+#### 4.2 Blue-green deployment
+Instead of `cf deploy` this time run `cf bg-deploy`
+
+    cf bg-deploy mta_archives/fortune-teller_0.0.1.mtar
+
+You now have two versions of the app running in parallel on different routes(idle and live). You may examine the new version of the application and verify it's working correctly before switching the live version's traffic to it. You should see minor changes in ui's style & a cheesy message appended to the fortunes by the backend app. 
+
+After making sure it works as expected, run the following command. Find the deploy process id printed in the bg-deploy command output or via the `cf mta-ops` command.
+
+    cf bg-deploy -a resume -i <process_id>
+
+*Enjoy your new app version, deployed without down time :clap: !*  
+
+TIP: You can run the blue-green deployment in one go, without manual test & resume. Leverage the \'zero downtime update' with the `--no-confirm` option
+
+## 5. Do the undeploy
+
+You're almost done! To free up resources after the exercise, please remove everything created with the following:
+    
+    cf undeploy fortune-teller --delete-services
+
+WARNING: use the `--delete-services` option only when sure that all consumed service instances should be deleted. Otherwise data loss may occur e.g. if a database service instance is deleted. 
+
+## 6. FINISH
+
+*Thank you* for running through the cf push -> cf deploy exercise! We hope the experience was fun and useful. 
+
+If you have any feedback, don't hasitate to find us in the project's https://cloudfoundry.slack.com/?redir=%2Fmessages%2Fmultiapps-dev[slack channel] or leave an issue at https://github.com/cloudfoundry-incubator/multiapps-controller/issues[project's github.com repo]
+
+IMPORTANT: Don't forget to ask your barista for a job well done treat!
+
+Find out more about the topic:
+
+- https://help.sap.com/viewer/65de2977205c403bbc107264b8eccf4b/Cloud/en-US/d04fc0e2ad894545aebfd7126384307c.html[Sap Cloud Platform documentation]
+- https://cloudfoundry-incubator.github.io/multiapps-controller/[project homepage]
+- https://github.com/cloudfoundry-incubator?utf8=%E2%9C%93&q=multiapps[project @ github.com]
+- https://www.youtube.com/watch?v=d07DZCuUXyk[youtube]
+
+
+
+

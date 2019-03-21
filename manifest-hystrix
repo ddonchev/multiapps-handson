@@ -1,0 +1,8 @@
+---
+applications:
+- name: fortune-teller-hystrix-dashboard
+  memroy: 512M
+  instances: 1
+  buildpak: sap_java_buildpack
+  path: 'fortune-teller-hystrix-dashboard/target/fortune-teller-hystrix-dashboard-0.0.1-SNAPSHOT.jar'
+  random-route: true

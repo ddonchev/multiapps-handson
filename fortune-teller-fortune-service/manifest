@@ -1,0 +1,13 @@
+---
+applications:
+- name: fortune-teller-service
+  memroy: 384M
+  instances: 1
+  buildpak: sap_java_buildpack
+  path: 'fortune-teller-fortune-service/target/fortune-teller-fortune-service-0.0.1-SNAPSHOT.jar'
+  random-route: true 
+  services:
+  - fortune-logs
+  - fortune-service-database
+  env:
+   DB: POSTGRESQL
