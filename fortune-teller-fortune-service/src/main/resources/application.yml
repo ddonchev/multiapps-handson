@@ -1,9 +1,10 @@
 spring:
   jpa:
-    database: MYSQL
+    #Read db type from environment variable. HSQL default; eg. POSTGRESQL,MYSQL, etc.
+    database: ${DB:HSQL}
+    show-sql: true
     hibernate:
       ddl-auto: create-drop
-
 ribbon:
   IsSecure: false
 
@@ -12,3 +13,7 @@ management:
     web:
       exposure:
         include: "*"
+
+security:
+  basic:
+    enabled: false

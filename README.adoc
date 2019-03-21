@@ -7,7 +7,7 @@ WARNING: Make sure to tell your cafe barista when you finish this tutorial. A yu
 
 Table Of Contents
 -----------------
-
+-  <<TODO ABSTRACT>>
 -  <<About the fortune teller>>
 -  <<0 Prerequisites>>
 -  <<1. Login to the platform>>
@@ -15,6 +15,9 @@ Table Of Contents
 -  <<3. Do the mta build & cf deploy>>
 -  <<4. Do the blue-green deploy>>
 -  <<5. Do the undeploy>>
+
+## TODO ABSTRACT
+Goal of the exercise here
 
 About the fortune teller
 ------------------------
@@ -63,7 +66,6 @@ This tutorial requires the following command line tools which you __already have
 
 ## 1. Login to the platform
 
-
 Before beginning, login to the platform and create your self a 'space' to work in
 
     cf api https://api.cf.eu10.hana.ondemand.com
@@ -71,11 +73,13 @@ Before beginning, login to the platform and create your self a 'space' to work i
     cf create-space <i/c/d/-user> -o cafe_mta
     cf target -o cafe_mta -s <i/c/d-user>
 
+IMPORTANT: The commands in the tutorial should be executed in the root of the repository :warning:
+
 ## 2. Do the cf push
 
-Let's push to the cloud, the standard cf way.
+NOTE: If already familiar with 'cf push' via manifests, you may only review the [ manifest file ](manifest) and jump directly to: <<3. Do the mta build & cf deploy>>
 
-IMPORTANT: The commands in the tutorial should be executed in the root of the repository :warning:
+Let's push to the cloud, the standard cf way.
 
 TIP: Of the instructions below, creation of the app entities is possible with a single command `cf push -f manifest`. However, service creation, app reconfiguration and restart would still have to be executed manually. Follow the steps below to work on each, one step at a time. 
 
@@ -164,6 +168,8 @@ Assemlbe with the already installed 'mta build tool' `mbt`:
     mbt assemble 
 
 You'll find a new directory `mta_archives` created in the project root. Inside is the new `*.mtar` archive. 
+
+NOTE: You can also assemble a complete mta archive on the fly just before deploying with the `cf deploy --all-moduels --all-resources` 
 
 #### 3.2 cf deploy
 Now simply deploy it to the cloud with the following command :zap: :

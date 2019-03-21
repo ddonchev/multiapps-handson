@@ -1,18 +1,32 @@
-ribbon:
-  isSecure: false
+server:
+  port: 8081
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
+localdev: false
+
+ribbon:
+  IsSecure: true
+  eureka:
+   enabled: false
+
+fortunes:
+  ribbon:
+    ServerListRefreshInterval: 5000
+    IsSecure: true
+    listOfServers: ${FORTUNE_SERVICE_FQDN:#{localhost:8080}}
+
+security:
+  basic:
+    enabled: false
 
 ---
 
 spring:
   profiles: pact
 
+localdev: true
+
 ribbon:
+  IsSecure: false
   eureka:
     enabled: false
 
@@ -21,6 +35,8 @@ hystrix:
     randomFortune:
       execution.isolation.thread.timeoutInMilliseconds: 2000
 
+# is this how the ribon rest client is configured to lok for the backend - address hard coded in ui!
 fortunes:
   ribbon:
+    IsSecure: false
     listOfServers: localhost:8080
