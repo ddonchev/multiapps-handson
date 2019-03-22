@@ -1,13 +1,10 @@
-From `cf push` to `cf deploy` hands-on
-======================================
+From `cf push` to `cf deploy`
+=============================
 
 With this tutorial, you can deploy the fortune teller application in the CF platform. You can experience both - the classic `cf push` way of doing this and the new `cf deploy`. Even do a zero downtime update of the app with `cf bg-deploy`.   
 
-WARNING: Make sure to tell your cafe barista when you finish this tutorial. A yummy snack will be waiting for you after the last command. 
-
 Table Of Contents
 -----------------
--  <<TODO ABSTRACT>>
 -  <<About the fortune teller>>
 -  <<0 Prerequisites>>
 -  <<1. Login to the platform>>
@@ -15,9 +12,6 @@ Table Of Contents
 -  <<3. Do the mta build & cf deploy>>
 -  <<4. Do the blue-green deploy>>
 -  <<5. Do the undeploy>>
-
-## TODO ABSTRACT
-Goal of the exercise here
 
 About the fortune teller
 ------------------------
@@ -46,8 +40,6 @@ This tutorial requires some resources in the cloud. If you don't already have an
 1. Open the SCP cockpit for an eu landscape and log on with your sap email and i/c/d-user password: https://account.hana.ondemand.com[https://account.hana.ondemand.com] ; 
 TODO: work out account reuse/authentication
 
-NOTE: Alternatively, a pre-configured technical user may be used. Please ask your barista for credentials *in person*. 
-
 #### This repository
 Clone the repository, no account in github is required. 
 
@@ -56,7 +48,7 @@ Clone the repository, no account in github is required.
 
 NOTE: Changing the source code won't be required. However, if you want to make changes, you can always rebuild the deployable content with maven. Maven may or may not be available on your machine. If it is, just run `mvn clean install` to build.
 
-#### Command line tools - *! Already installed on your machine. do not download !*
+#### Command line tools
 This tutorial requires the following command line tools which you __already have pre-installed__: 
 
  * https://github.com/cloudfoundry/cli#installers-and-compressed-binaries[cloud foundry command line tool (cf cli)]
@@ -224,15 +216,13 @@ You're almost done! To free up resources after the exercise, please remove every
     
     cf undeploy fortune-teller --delete-services
 
-WARNING: use the `--delete-services` option only when sure that all consumed service instances should be deleted. Otherwise data loss may occur e.g. if a database service instance is deleted. 
-
 ## 6. FINISH
 
-*Thank you* for running through the cf push -> cf deploy exercise! We hope the experience was fun and useful. 
+*Thank you* for running through the cf push -> cf deploy lab! We hope the experience was fun and useful. 
 
-If you have any feedback, don't hasitate to find us in the project's https://cloudfoundry.slack.com/?redir=%2Fmessages%2Fmultiapps-dev[slack channel] or leave an issue at https://github.com/cloudfoundry-incubator/multiapps-controller/issues[project's github.com repo]
+TODO: elaborate on the value of cf push/cf deploy & cf bg-deploy.
 
-IMPORTANT: Don't forget to ask your barista for a job well done treat!
+If you have any feedback, don't hasitate to find us in the project's [slack channel](https://cloudfoundry.slack.com/?redir=%2Fmessages%2Fmultiapps-dev) or leave an issue at [project's github.com repo](https://github.com/cloudfoundry-incubator/multiapps-controller/issues)
 
 Find out more about the topic:
 
