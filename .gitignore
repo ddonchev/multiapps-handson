@@ -13,6 +13,7 @@ Thumbs.db
 .gradle/
 build/
 target/
+*.mtar
 bin/
 
 # Eclipse Project Files

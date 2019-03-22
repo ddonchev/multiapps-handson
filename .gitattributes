@@ -1,0 +1,2 @@
+*.mtar filter=lfs diff=lfs merge=lfs -text
+*SNAPSHOT.jar filter=lfs diff=lfs merge=lfs -text
