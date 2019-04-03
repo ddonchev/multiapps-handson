@@ -1,11 +1,11 @@
 _schema-version: "3.1.0"
 ID: fortune-teller
-version: 0.0.1
+version: 0.0.2
 
 modules:
   - name: fortune-teller-service
     type: application
-    path: 'fortune-teller-fortune-service/target/fortune-teller-fortune-service-0.0.1-SNAPSHOT.jar'
+    path: 'fortune-teller-fortune-service/target/fortune-teller-fortune-service-0.0.2-SNAPSHOT.jar'
     parameters:
       buildpack: sap_java_buildpack
       memroy: 512M
@@ -18,7 +18,7 @@ modules:
         uri: "${default-uri}"
   - name: fortune-teller-ui
     type: application
-    path: 'fortune-teller-ui/target/fortune-teller-ui-0.0.1-SNAPSHOT.jar'
+    path: 'fortune-teller-ui/target/fortune-teller-ui-0.0.2-SNAPSHOT.jar'
     parameters:
       buildpack: sap_java_buildpack
       memroy: 512M
@@ -33,7 +33,7 @@ modules:
         url: "${default-url}"
   - name: fortune-teller-hystrix-dashboard
     type: application
-    path: 'fortune-teller-hystrix-dashboard/target/fortune-teller-hystrix-dashboard-0.0.1-SNAPSHOT.jar'
+    path: 'fortune-teller-hystrix-dashboard/target/fortune-teller-hystrix-dashboard-0.0.2-SNAPSHOT.jar'
     parameters:
       buildpack: sap_java_buildpack
       memroy: 512M

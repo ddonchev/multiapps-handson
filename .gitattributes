@@ -1,2 +1,6 @@
 *.mtar filter=lfs diff=lfs merge=lfs -text
 *SNAPSHOT.jar filter=lfs diff=lfs merge=lfs -text
+fortune-teller-fortune-service/target/fortune-teller-fortune-service-0.0.2-SNAPSHOT.jar filter=lfs diff=lfs merge=lfs -text
+fortune-teller-ui/target/fortune-teller-ui-0.0.2-SNAPSHOT.jar filter=lfs diff=lfs merge=lfs -text
+fortune-teller-hystrix-dashboard/target/fortune-teller-hystrix-dashboard-0.0.2-SNAPSHOT.jar filter=lfs diff=lfs merge=lfs -text
+mta_archives/fortune-teller_0.0.2.mtar filter=lfs diff=lfs merge=lfs -text

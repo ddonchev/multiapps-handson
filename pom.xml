@@ -7,7 +7,7 @@
 	<groupId>io.spring.cloud.samples</groupId>
 	<artifactId>fortune-teller</artifactId>
 	<packaging>pom</packaging>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<name>Fortune Teller Cloud-Native Application</name>
 
 	<modules>

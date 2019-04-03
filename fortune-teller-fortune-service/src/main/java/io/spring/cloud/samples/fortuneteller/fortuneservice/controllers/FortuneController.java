@@ -38,6 +38,8 @@ public class FortuneController {
     @RequestMapping("/random")
     public Fortune randomFortune() {
         List<Fortune> randomFortunes = repository.randomFortunes(new PageRequest(0, 1));
-        return randomFortunes.get(0);
+        Fortune fortune = randomFortunes.get(0);
+        fortune.setText(fortune.getText()+" Wow, that was deep!");
+        return fortune;
     }
 }
